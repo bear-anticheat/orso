@@ -1,0 +1,4 @@
+name: Orso
+main: com.bear.orso.bungee.OrsoBungee
+version: 1.0.0-SNAPSHOT
+author: Bear Development Team
