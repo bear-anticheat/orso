@@ -8,6 +8,7 @@ import com.google.gson.JsonParser;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import net.kyori.adventure.text.Component;
@@ -38,15 +39,41 @@ public class VelocityPluginMessageListener {
             final String _json = new String(event.getData(), StandardCharsets.UTF_8);
             final JsonObject json = JsonParser.parseString(_json).getAsJsonObject();
 
-            final String formatted = MessageParser.fromJson(json, isOnline ? configuration.getAlertFormat() : ALERT_FORMAT);
-            final String data = json.get("data").getAsString();
+            final String type = json.get("type").getAsString();
 
-            final Component component = Component.text(formatted)
-                    .hoverEvent(HoverEvent.showText(Component.text(data, NamedTextColor.GRAY)));
+            switch (type) {
+                case "alert": {
+                    if (isOnline && !configuration.isProxyAlerts()) break;
 
-            for (final Player player : OrsoVelocity.INSTANCE.getServer().getAllPlayers()) {
-                if (player.hasPermission("bear.alerts")) {
-                    player.sendMessage(component);
+                    final String formatted = MessageParser.fromJson(json, isOnline ? configuration.getAlertFormat() : ALERT_FORMAT);
+                    final String data = json.get("data").getAsString();
+
+                    final Component component = Component.text(formatted)
+                            .hoverEvent(HoverEvent.showText(Component.text(data, NamedTextColor.GRAY)));
+
+                    for (final Player player : OrsoVelocity.INSTANCE.getServer().getAllPlayers()) {
+                        if (player.hasPermission("bear.alerts")) {
+                            player.sendMessage(component);
+                        }
+                    }
+
+                    break;
+                }
+                case "ban": {
+                    if (!isOnline || !configuration.isProxyBans()) break;
+
+                    final String username = json.get("username").getAsString();
+                    final String uuid = json.get("uuid").getAsString();
+
+                    final String commandName = configuration.getBanCommand()
+                            .replace("%player%", username)
+                            .replace("%uuid%", uuid);
+
+                    final ProxyServer proxyServer = OrsoVelocity.INSTANCE.getServer();
+
+                    proxyServer.getCommandManager().executeAsync(proxyServer.getConsoleCommandSource(), commandName);
+
+                    break;
                 }
             }
         }
