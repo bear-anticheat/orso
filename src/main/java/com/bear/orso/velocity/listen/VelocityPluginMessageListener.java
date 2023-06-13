@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -23,6 +24,10 @@ public class VelocityPluginMessageListener {
     public void onPluginMessage(final PluginMessageEvent event) {
         final ChannelIdentifier channelIdentifier = event.getIdentifier();
         final String channelName = channelIdentifier.getId();
+
+        if (event.getSource() instanceof Player) {
+            return;
+        }
 
         if (channelName.equals("orso")) {
             final String _json = new String(event.getData(), StandardCharsets.UTF_8);

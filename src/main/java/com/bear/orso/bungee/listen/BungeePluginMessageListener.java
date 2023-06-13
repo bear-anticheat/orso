@@ -8,6 +8,7 @@ import com.google.gson.JsonParser;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.connection.Connection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PluginMessageEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -23,6 +24,10 @@ public class BungeePluginMessageListener implements Listener {
     @EventHandler
     public void onPluginMessage(final PluginMessageEvent event) {
         final String channelName = event.getTag();
+
+        if (!(event.getSender() instanceof Connection)) {
+            return;
+        }
 
         if (channelName.equals("orso")) {
             final String _json = new String(event.getData(), StandardCharsets.UTF_8);
