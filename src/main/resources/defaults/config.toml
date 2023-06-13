@@ -1,0 +1,5 @@
+[auth]
+license_key = "" # your license key, used to authenticate and fetch your cloud config
+
+[bjorn]
+hostname = "https://prod.placeholderdomain.xyz" # don't change this unless you know what you're doing!

@@ -1,5 +1,6 @@
 package com.bear.orso.velocity.listen;
 
+import com.bear.bjornsdk.object.Configuration;
 import com.bear.orso.common.alert.MessageParser;
 import com.bear.orso.velocity.OrsoVelocity;
 import com.google.gson.JsonObject;
@@ -29,11 +30,15 @@ public class VelocityPluginMessageListener {
             return;
         }
 
+        final Configuration configuration = OrsoVelocity.INSTANCE.getCloudConfig();
+
+        final boolean isOnline = configuration != null;
+
         if (channelName.equals("orso")) {
             final String _json = new String(event.getData(), StandardCharsets.UTF_8);
             final JsonObject json = JsonParser.parseString(_json).getAsJsonObject();
 
-            final String formatted = MessageParser.fromJson(json, ALERT_FORMAT);
+            final String formatted = MessageParser.fromJson(json, isOnline ? configuration.getAlertFormat() : ALERT_FORMAT);
             final String data = json.get("data").getAsString();
 
             final Component component = Component.text(formatted)
