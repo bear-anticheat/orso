@@ -53,7 +53,7 @@
         <dependency>
             <groupId>com.github.bear-anticheat</groupId>
             <artifactId>bjorn-sdk</artifactId>
-            <version>master-0d09d36713-1</version>
+            <version>671a93048d</version>
         </dependency>
     </dependencies>
 
