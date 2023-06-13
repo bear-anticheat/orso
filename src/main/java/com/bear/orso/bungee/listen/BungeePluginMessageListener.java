@@ -7,6 +7,7 @@ import com.bear.orso.common.util.Color;
 import com.bear.orso.velocity.OrsoVelocity;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -39,18 +40,44 @@ public class BungeePluginMessageListener implements Listener {
             final String _json = new String(event.getData(), StandardCharsets.UTF_8);
             final JsonObject json = JsonParser.parseString(_json).getAsJsonObject();
 
-            final String formatted = MessageParser.fromJson(json, isOnline ? configuration.getAlertFormat() : ALERT_FORMAT);
-            final String data = json.get("data").getAsString();
+            final String type = json.get("type").getAsString();
 
-            final TextComponent component = new TextComponent(new ComponentBuilder(formatted)
-                    .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                            new ComponentBuilder(Color.translate("&7" + data)).create()))
-                    .create()
-            );
+            switch (type) {
+                case "alert": {
+                    if (isOnline && !configuration.isProxyAlerts()) break;
 
-            for (final ProxiedPlayer player : OrsoBungee.INSTANCE.getProxy().getPlayers()) {
-                if (player.hasPermission("bear.alerts")) {
-                    player.sendMessage(component);
+                    final String formatted = MessageParser.fromJson(json, isOnline ? configuration.getAlertFormat() : ALERT_FORMAT);
+                    final String data = json.get("data").getAsString();
+
+                    final TextComponent component = new TextComponent(new ComponentBuilder(formatted)
+                            .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                    new ComponentBuilder(Color.translate("&7" + data)).create()))
+                            .create()
+                    );
+
+                    for (final ProxiedPlayer player : OrsoBungee.INSTANCE.getProxy().getPlayers()) {
+                        if (player.hasPermission("bear.alerts")) {
+                            player.sendMessage(component);
+                        }
+                    }
+
+                    break;
+                }
+                case "ban": {
+                    if (!isOnline || !configuration.isProxyBans()) break;
+
+                    final String username = json.get("username").getAsString();
+                    final String uuid = json.get("uuid").getAsString();
+
+                    final String commandName = configuration.getBanCommand()
+                            .replace("%player%", username)
+                            .replace("%uuid%", uuid);
+
+                    final ProxyServer proxyServer = OrsoBungee.INSTANCE.getProxy();
+
+                    proxyServer.getPluginManager().dispatchCommand(proxyServer.getConsole(), commandName);
+
+                    break;
                 }
             }
         }
