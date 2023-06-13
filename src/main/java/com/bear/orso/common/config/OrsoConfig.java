@@ -1,4 +1,4 @@
-package com.bear.orso.velocity.config;
+package com.bear.orso.common.config;
 
 import com.moandjiezana.toml.Toml;
 import lombok.SneakyThrows;
@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class VelocityConfigUtil {
+public class OrsoConfig {
 
     @SneakyThrows
     private static Toml load0(Class<?> defResClass, Path dataDirectory, String name) {

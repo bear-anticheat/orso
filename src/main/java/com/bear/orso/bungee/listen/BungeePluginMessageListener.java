@@ -1,8 +1,10 @@
 package com.bear.orso.bungee.listen;
 
+import com.bear.bjornsdk.object.Configuration;
 import com.bear.orso.bungee.OrsoBungee;
 import com.bear.orso.common.alert.MessageParser;
 import com.bear.orso.common.util.Color;
+import com.bear.orso.velocity.OrsoVelocity;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -29,11 +31,15 @@ public class BungeePluginMessageListener implements Listener {
             return;
         }
 
+        final Configuration configuration = OrsoVelocity.INSTANCE.getCloudConfig();
+
+        final boolean isOnline = configuration != null;
+
         if (channelName.equals("orso")) {
             final String _json = new String(event.getData(), StandardCharsets.UTF_8);
             final JsonObject json = JsonParser.parseString(_json).getAsJsonObject();
 
-            final String formatted = MessageParser.fromJson(json, ALERT_FORMAT);
+            final String formatted = MessageParser.fromJson(json, isOnline ? configuration.getAlertFormat() : ALERT_FORMAT);
             final String data = json.get("data").getAsString();
 
             final TextComponent component = new TextComponent(new ComponentBuilder(formatted)

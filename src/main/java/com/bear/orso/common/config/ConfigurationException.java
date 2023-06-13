@@ -1,4 +1,4 @@
-package com.bear.orso.velocity.config;
+package com.bear.orso.common.config;
 
 public class ConfigurationException extends Exception {
     public ConfigurationException() {

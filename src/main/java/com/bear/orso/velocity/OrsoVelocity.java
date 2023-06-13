@@ -3,7 +3,7 @@ package com.bear.orso.velocity;
 import com.bear.bjornsdk.BjornSDK;
 import com.bear.bjornsdk.object.Configuration;
 import com.bear.bjornsdk.response.impl.ConfigResponse;
-import com.bear.orso.velocity.config.VelocityConfigUtil;
+import com.bear.orso.common.config.OrsoConfig;
 import com.bear.orso.velocity.listen.VelocityPluginMessageListener;
 import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
@@ -14,7 +14,6 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -45,7 +44,7 @@ public class OrsoVelocity {
 
     @Subscribe
     public void onInitialize(final ProxyInitializeEvent event) {
-        config = VelocityConfigUtil.load(getClass(), dataDirectory, "config");
+        config = OrsoConfig.load(getClass(), dataDirectory, "config");
 
         initBjorn();
 
