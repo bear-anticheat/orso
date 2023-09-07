@@ -2,11 +2,8 @@ package com.bear.orso.bungee.listen;
 
 import com.bear.bjornsdk.object.Configuration;
 import com.bear.orso.bungee.OrsoBungee;
-import com.bear.orso.common.alert.MessageParser;
+import com.bear.orso.common.handler.UnifiedHandler;
 import com.bear.orso.common.util.Color;
-import com.bear.orso.velocity.OrsoVelocity;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -18,11 +15,10 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 import java.nio.charset.StandardCharsets;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class BungeePluginMessageListener implements Listener {
-
-    public static final String ALERT_FORMAT =
-            "&b&l⚡ &r&7/ &b%player% &7has failed &b%name% &7(&b%type%&7) &3x%vl%";
 
     @EventHandler
     public void onPluginMessage(final PluginMessageEvent event) {
@@ -32,54 +28,32 @@ public class BungeePluginMessageListener implements Listener {
             return;
         }
 
-        final Configuration configuration = OrsoVelocity.INSTANCE.getCloudConfig();
-
-        final boolean isOnline = configuration != null;
+        final Configuration configuration = OrsoBungee.INSTANCE.getCloudConfig();
 
         if (channelName.equals("orso")) {
             final String _json = new String(event.getData(), StandardCharsets.UTF_8);
-            final JsonObject json = JsonParser.parseString(_json).getAsJsonObject();
 
-            final String type = json.get("type").getAsString();
+            final BiConsumer<String, String> alertConsumer = (formatted, data) -> {
+                final TextComponent component = new TextComponent(new ComponentBuilder(formatted)
+                        .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                new ComponentBuilder(Color.translate("&7" + data)).create()))
+                        .create()
+                );
 
-            switch (type) {
-                case "alert": {
-                    if (isOnline && !configuration.isProxyAlerts()) break;
-
-                    final String formatted = MessageParser.fromJson(json, isOnline ? configuration.getAlertFormat() : ALERT_FORMAT);
-                    final String data = json.get("data").getAsString();
-
-                    final TextComponent component = new TextComponent(new ComponentBuilder(formatted)
-                            .event(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                    new ComponentBuilder(Color.translate("&7" + data)).create()))
-                            .create()
-                    );
-
-                    for (final ProxiedPlayer player : OrsoBungee.INSTANCE.getProxy().getPlayers()) {
-                        if (player.hasPermission("bear.alerts")) {
-                            player.sendMessage(component);
-                        }
+                for (final ProxiedPlayer player : OrsoBungee.INSTANCE.getProxy().getPlayers()) {
+                    if (player.hasPermission("bear.alerts")) {
+                        player.sendMessage(component);
                     }
-
-                    break;
                 }
-                case "ban": {
-                    if (!isOnline || !configuration.isProxyBans()) break;
+            };
 
-                    final String username = json.get("username").getAsString();
-                    final String uuid = json.get("uuid").getAsString();
+            final Consumer<String> banConsumer = (commandName) -> {
+                final ProxyServer proxyServer = OrsoBungee.INSTANCE.getProxy();
 
-                    final String commandName = configuration.getBanCommand()
-                            .replace("%player%", username)
-                            .replace("%uuid%", uuid);
+                proxyServer.getPluginManager().dispatchCommand(proxyServer.getConsole(), commandName);
+            };
 
-                    final ProxyServer proxyServer = OrsoBungee.INSTANCE.getProxy();
-
-                    proxyServer.getPluginManager().dispatchCommand(proxyServer.getConsole(), commandName);
-
-                    break;
-                }
-            }
+            UnifiedHandler.handle(configuration, _json, alertConsumer, banConsumer);
         }
     }
 }
