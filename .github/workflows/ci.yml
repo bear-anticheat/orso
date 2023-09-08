@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      DATE: ${{ steps.get_date.outputs.DATE }}
+    steps:
+      - name: Get current date
+        id: get_date
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+  ubuntu:
+    strategy:
+      matrix:
+        os-version: [ "x64" ]
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      - name: build
+        run: mvn --batch-mode --update-snapshots clean package
+
+      - name: extract
+        run: |
+          mkdir staging
+          cp target/bear-orso.jar staging
+
+      - name: upload-jar
+        uses: actions/upload-artifact@v3
+        with:
+          path: staging/bear-orso.jar
+
+  release:
+    needs: [ setup, ubuntu ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          path: asset
+
+      - name: extract
+        run: |
+          mkdir dist
+          cp asset/artifact/* dist
+          cd dist && ls
+
+      - name: publish
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Orso ${{ needs.setup.outputs.DATE }}
+          tag_name: ${{ needs.setup.outputs.DATE }}
+          body: Automated release build of orso from the master branch. This build was created on ${{ needs.setup.outputs.DATE }}
+          draft: false
+          prerelease: false
+          files: dist/*
